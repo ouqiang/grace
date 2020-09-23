@@ -57,15 +57,22 @@ func (a *app) listen() error {
 	for _, s := range a.servers {
 		scheme := "tcp"
 		addr := s.Addr
+		isUnixSocket := false
 		u, err := url.Parse(s.Addr)
 		if err == nil && u.Scheme == "unix" {
+			isUnixSocket = true
 			scheme = u.Scheme
 			addr = u.Path
 		}
 		// TODO: default addresses
 		l, err := a.net.Listen(scheme, addr)
+
 		if err != nil {
 			return err
+		}
+		if isUnixSocket {
+			unixListener := l.(*net.UnixListener)
+			unixListener.SetUnlinkOnClose(false)
 		}
 		if s.TLSConfig != nil {
 			l = tls.NewListener(l, s.TLSConfig)
