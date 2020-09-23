@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -67,9 +68,17 @@ func (a *app) listen() error {
 		// TODO: default addresses
 		l, err := a.net.Listen(scheme, addr)
 
+		if err != nil && isUnixSocket && strings.Contains(err.Error(), "bind: address already in use") {
+			err = os.Remove(addr)
+			if err != nil {
+				return err
+			}
+			l, err = a.net.Listen(scheme, addr)
+		}
 		if err != nil {
 			return err
 		}
+
 		if isUnixSocket {
 			unixListener := l.(*net.UnixListener)
 			unixListener.SetUnlinkOnClose(false)
