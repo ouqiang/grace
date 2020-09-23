@@ -9,13 +9,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	"github.com/facebookgo/grace/gracenet"
 	"github.com/facebookgo/httpdown"
+	"github.com/ouqiang/grace/gracenet"
 )
 
 var (
@@ -54,8 +55,15 @@ func newApp(servers []*http.Server) *app {
 
 func (a *app) listen() error {
 	for _, s := range a.servers {
+		scheme := "tcp"
+		addr := s.Addr
+		u, err := url.Parse(s.Addr)
+		if err == nil && u.Scheme == "unix" {
+			scheme = u.Scheme
+			addr = u.Path
+		}
 		// TODO: default addresses
-		l, err := a.net.Listen("tcp", s.Addr)
+		l, err := a.net.Listen(scheme, addr)
 		if err != nil {
 			return err
 		}

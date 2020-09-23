@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/facebookgo/grace/gracehttp"
+	"github.com/ouqiang/grace/gracehttp"
 )
 
 const preStartProcessEnv = "GRACEHTTP_PRE_START_PROCESS"
