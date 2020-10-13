@@ -67,8 +67,16 @@ func (a *app) listen() error {
 		}
 		// TODO: default addresses
 		l, err := a.net.Listen(scheme, addr)
-
 		if err != nil && isUnixSocket && strings.Contains(err.Error(), "bind: address already in use") {
+			// 判断socket file是否被使用中
+			// 使用中: 返回错误, socket文件不支持被多个进程同时监听
+			// 未使用: 删除socket file
+
+			// 使用中返回错误
+			if _, e := net.Dial(scheme, addr); e == nil {
+				return err
+			}
+
 			err = os.Remove(addr)
 			if err != nil {
 				return err
