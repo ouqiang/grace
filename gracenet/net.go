@@ -13,7 +13,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +23,10 @@ const (
 	envCountKey       = "LISTEN_FDS"
 	envCountKeyPrefix = envCountKey + "="
 )
+
+// In order to keep the working directory the same as when we started we record
+// it at startup.
+var originalWD, _ = os.Getwd()
 
 // Net provides the family of Listen functions and maintains the associated
 // state. Typically you will have only once instance of Net per application.
@@ -233,14 +236,8 @@ func (n *Net) StartProcess() (int, error) {
 	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
 
 	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
-
-	wd := filepath.Dir(argv0)
-	if filepath.Base(wd) == "bin" {
-		wd = filepath.Dir(wd)
-	}
-
 	process, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
-		Dir:   wd,
+		Dir:   originalWD,
 		Env:   env,
 		Files: allFiles,
 	})
