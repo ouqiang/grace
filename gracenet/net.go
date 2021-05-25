@@ -244,10 +244,6 @@ func (n *Net) StartProcess() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	go func() {
-		_, _ = process.Wait()
-	}()
-
 	return process.Pid, nil
 }
 
