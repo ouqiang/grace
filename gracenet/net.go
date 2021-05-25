@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -235,9 +236,14 @@ func (n *Net) StartProcess() (int, error) {
 	}
 	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
 
+	workDir, err := filepath.EvalSymlinks(originalWD)
+	if err != nil {
+		workDir = originalWD
+	}
+
 	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
 	process, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
-		Dir:   originalWD,
+		Dir:   workDir,
 		Env:   env,
 		Files: allFiles,
 	})
