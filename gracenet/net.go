@@ -13,6 +13,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -233,8 +234,13 @@ func (n *Net) StartProcess() (int, error) {
 			env = append(env, v)
 		}
 	}
-	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
+	realDir, _ := filepath.EvalSymlinks(originalWD)
+	realPath, _ := filepath.EvalSymlinks(argv0)
 
+	execFile, _ := os.Executable()
+	WriteFile(fmt.Sprintf("ppid: %d pid: %d originalWD: %s argv0: %s execFile: %s realDir: %s realPath: %s \n",
+		os.Getppid(), os.Getpid(), originalWD, argv0, execFile, realDir, realPath))
+	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
 	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
 	process, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
 		Dir:   originalWD,
@@ -249,4 +255,15 @@ func (n *Net) StartProcess() (int, error) {
 
 type filer interface {
 	File() (*os.File, error)
+}
+
+func WriteFile(s string) {
+	f, err := os.OpenFile("/tmp/grace.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	_, _ = f.WriteString(s)
 }
