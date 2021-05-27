@@ -232,7 +232,7 @@ func (n *Net) StartProcess() (int, error) {
 	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
 
 	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
-	wd, _ = os.Getwd()
+	wd, _ := os.Getwd()
 	process, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
 		Dir:   wd,
 		Env:   env,
