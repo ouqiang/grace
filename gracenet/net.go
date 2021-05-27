@@ -24,10 +24,6 @@ const (
 	envCountKeyPrefix = envCountKey + "="
 )
 
-// In order to keep the working directory the same as when we started we record
-// it at startup.
-var originalWD, _ = os.Getwd()
-
 // Net provides the family of Listen functions and maintains the associated
 // state. Typically you will have only once instance of Net per application.
 type Net struct {
@@ -236,8 +232,9 @@ func (n *Net) StartProcess() (int, error) {
 	env = append(env, fmt.Sprintf("%s%d", envCountKeyPrefix, len(listeners)))
 
 	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
+	wd, _ = os.Getwd()
 	process, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
-		Dir:   originalWD,
+		Dir:   wd,
 		Env:   env,
 		Files: allFiles,
 	})
